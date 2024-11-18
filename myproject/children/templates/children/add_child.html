@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <!-- Кнопка для открытия модального окна -->
+    <button id="addChildBtn">Добавить ребёнка</button>
+
+    <!-- Модальное окно для добавления ребёнка -->
+    <div id="addChildModal" style="display: none;">
+        <h2>Добавить ребёнка</h2>
+        <form id="addChildForm" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div>
+                {{ form.as_p }}
+            </div>
+            <button type="submit">Добавить</button>
+        </form>
+        <button id="closeModalBtn">Закрыть</button>
+    </div>
+
+    <!-- Модальное окно для отображения QR-кода -->
+    <div id="qrCodeModal" style="display: none;">
+        <h2>QR код ребёнка</h2>
+        <img id="qrCodeImage" src="" alt="QR код">
+        <button id="closeQRCodeModalBtn">Закрыть</button>
+    </div>
+
+    <script>
+        // Открытие модального окна для добавления ребёнка
+        document.getElementById('addChildBtn').addEventListener('click', function() {
+            document.getElementById('addChildModal').style.display = 'block';
+        });
+
+        // Закрытие модального окна для добавления ребёнка
+        document.getElementById('closeModalBtn').addEventListener('click', function() {
+            document.getElementById('addChildModal').style.display = 'none';
+        });
+
+        // Обработка отправки формы
+        document.getElementById('addChildForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch("{% url 'add_child' %}", {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Закрытие формы добавления ребёнка
+                    document.getElementById('addChildModal').style.display = 'none';
+                    // Показ модального окна с QR-кодом
+                    document.getElementById('qrCodeImage').src = data.qr_code_url;
+                    document.getElementById('qrCodeModal').style.display = 'block';
+                } else {
+                    alert('Ошибка при добавлении ребёнка: ' + JSON.stringify(data.errors));
+                }
+            });
+        });
+
+        // Закрытие модального окна с QR-кодом
+        document.getElementById('closeQRCodeModalBtn').addEventListener('click', function() {
+            document.getElementById('qrCodeModal').style.display = 'none';
+        });
+    </script>
+{% endblock %}
