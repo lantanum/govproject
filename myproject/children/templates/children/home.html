@@ -1,0 +1,41 @@
+<!-- Кнопка добавления ребёнка -->
+<button id="addChildBtn">Добавить ребёнка</button>
+
+<!-- Модальное окно для добавления ребёнка -->
+<div id="addChildModal" style="display: none;">
+    <form id="addChildForm">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Добавить</button>
+    </form>
+</div>
+
+<!-- Модальное окно для отображения QR-кода -->
+<div id="qrCodeModal" style="display: none;">
+    <img id="qrCodeImage" src="" alt="QR Code">
+</div>
+
+<script>
+    document.getElementById('addChildBtn').addEventListener('click', function() {
+        document.getElementById('addChildModal').style.display = 'block';
+    });
+
+    document.getElementById('addChildForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch("{% url 'add_child' %}", {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('addChildModal').style.display = 'none';
+                document.getElementById('qrCodeImage').src = data.qr_code_url;
+                document.getElementById('qrCodeModal').style.display = 'block';
+            } else {
+                alert('Ошибка: ' + JSON.stringify(data.errors));
+            }
+        });
+    });
+</script>
