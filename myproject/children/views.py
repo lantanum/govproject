@@ -18,5 +18,44 @@ def add_child(request):
     form = ChildForm()
     return render(request, 'children/add_child.html', {'form': form})
 
-def home(request):
-    return render(request, 'children/home.html')
+
+
+
+def main_view(request):
+    # Список секций
+    sections = [
+        {'name': 'Бокс', 'url': '/section/boxing/'},
+        {'name': 'Каратэ', 'url': '/section/karate/'},
+        {'name': 'Дзюдо', 'url': '/section/judo/'},
+        {'name': 'Борьба', 'url': '/section/wrestling/'},
+    ]
+    return render(request, 'children/main.html', {'sections': sections})
+
+
+def boxing_view(request):
+    students = [
+        {'id': 1, 'name': 'Акимжанов Ануар Акимжанович'},
+        {'id': 2, 'name': 'Акимжанов Ануар Акимжанович'},
+        {'id': 3, 'name': 'Акимжанов Ануар Акимжанович'},
+        {'id': 4, 'name': 'Акимжанов Ануар Акимжанович'},
+        {'id': 5, 'name': 'Акимжанов Ануар Акимжанович'},
+        {'id': 6, 'name': 'Акимжанов Ануар Акимжанович'},
+    ]
+    return render(request, 'children/boxing.html', {'students': students})
+
+def profile_view(request):
+    return render(request, 'children/profile.html')
+
+def scan_view(request):
+    return render(request, 'children/scan.html')
+
+def identify_child(request):
+    if request.method == 'POST':
+        qr_data = request.POST.get('qr_data', '')
+        try:
+            # Поиск ребенка по данным из QR-кода
+            child = Child.objects.get(iin=qr_data.split(' ')[2])  # Пример: парсинг ИИН из текста QR-кода
+            return JsonResponse({'success': True, 'child_name': child.full_name, 'birth_date': child.birth_date})
+        except Child.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Ребёнок не найден.'})
+    return JsonResponse({'success': False, 'error': 'Неверный метод запроса.'})
