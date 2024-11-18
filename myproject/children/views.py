@@ -59,3 +59,49 @@ def identify_child(request):
         except Child.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Ребёнок не найден.'})
     return JsonResponse({'success': False, 'error': 'Неверный метод запроса.'})
+
+
+def add_new_child(request):
+    return render(request, 'children/add_new_child.html')
+
+
+def add_section(request):
+    if request.method == 'POST':
+        section_name = request.POST.get('section_name')
+        schedule = request.POST.get('schedule')
+        time = request.POST.get('time')
+        # Здесь вы можете сохранить данные в базу данных, если нужно.
+        # Например:
+        # Section.objects.create(name=section_name, schedule=schedule, time=time)
+        return redirect('profile')  # Перенаправляем на страницу профиля после добавления
+    
+    return render(request, 'children/add_section.html')
+
+
+def add_employee(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        photo = request.FILES.get('photo')
+        # Здесь можно добавить сохранение сотрудника в базу данных, если нужно:
+        # Employee.objects.create(username=username, password=password, photo=photo)
+        return redirect('profile')  # После добавления перенаправляем в профиль
+
+    return render(request, 'children/add_employee.html')
+
+def add_organization(request):
+    if request.method == 'POST':
+        organization_name = request.POST.get('organization_name')
+        director_username = request.POST.get('director_username')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        # Логика проверки паролей
+        if password != confirm_password:
+            return render(request, 'children/add_organization.html', {'error': 'Пароли не совпадают!'})
+        
+        # Сохранение организации в базу данных (опционально)
+        # Organization.objects.create(name=organization_name, director=director_username, password=password)
+        return redirect('profile')  # После добавления перенаправляем в профиль
+
+    return render(request, 'children/add_organization.html')
