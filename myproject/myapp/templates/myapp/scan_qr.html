@@ -4,28 +4,57 @@
 
 {% block content %}
 <h2>Сканирование QR-кода</h2>
-<video id="camera" autoplay></video>
+
+<!-- Кнопка для запуска камеры -->
+<button id="start-camera">Запустить камеру</button>
+
+<!-- Элемент для отображения видео с камеры -->
+<video id="camera" width="100%" height="auto" autoplay></video>
+
+<!-- Место для отображения результата -->
 <p id="result"></p>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
+
 <script>
     const html5QrCode = new Html5Qrcode("camera");
-    html5QrCode.start({ facingMode: "environment" }, {}, qrCodeMessage => {
-        fetch("", {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": "{{ csrf_token }}"
+
+    // Функция для старта камеры
+    document.getElementById('start-camera').addEventListener('click', () => {
+        // Запрашиваем доступ к камере и запускаем сканирование
+        html5QrCode.start(
+            { facingMode: "environment" }, // Использование задней камеры
+            {
+                fps: 10,  // Количество кадров в секунду
+                qrbox: 250  // Размер области для сканирования
             },
-            body: JSON.stringify({ qr_data: qrCodeMessage })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('result').innerText = "Посещение зарегистрировано!";
-            } else {
-                document.getElementById('result').innerText = "Ошибка: " + data.error;
+            qrCodeMessage => {
+                // Когда QR-код сканирован, отправляем его на сервер
+                fetch("", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ qr_data: qrCodeMessage })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('result').innerText = "Посещение зарегистрировано!";
+                    } else {
+                        document.getElementById('result').innerText = "Ошибка: " + data.error;
+                    }
+                });
+            },
+            (errorMessage) => {
+                // Обработчик ошибок, например, если не удается сканировать
+                console.log(errorMessage);
             }
+        ).catch(err => {
+            console.error("Ошибка при открытии камеры: ", err);
         });
     });
 </script>
+
 {% endblock %}
