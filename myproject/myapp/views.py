@@ -28,16 +28,19 @@ def profile_view(request):
     return render(request, 'myapp/profile.html')
 
 def scan_view(request):
-    if request.user.role == 'client':
-        # Генерация QR-кода
+    person = request.user.person  # Получение связанного объекта Person
+
+    if person.role == 'client':
+        # Генерация QR-кода для клиента
         if request.method == 'POST':
             qr_data = f"user:{request.user.username};time:{int(time.time())}"
-            qr_code = generate_qr_code(qr_data)
+            qr_code = generate_qr_code(qr_data)  # Функция генерации QR-кода
             return JsonResponse({'success': True, 'qr_code': qr_code})
         return render(request, 'myapp/scan.html')
 
-    elif request.user.role == 'coach':
-        # Страница для сканирования QR
+    elif person.role == 'coach':
+        # Страница для сканирования QR для тренера
         return render(request, 'myapp/scan_qr.html')
 
+    # Ошибка доступа для других ролей
     return JsonResponse({'error': 'Доступ запрещён.'}, status=403)

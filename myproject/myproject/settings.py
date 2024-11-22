@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-6z1-mt2p#t+3_-#77q92b6^y7u*)yl&jt_oxyo4ybe)wr(se1a
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['34.55.201.129']
 
 
 # Application definition
@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts',
     'myapp',
+    'accounts',
     'django_extensions',
 ]
 
@@ -79,11 +79,11 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'railway',
-        'USER': 'postgres',
-        'PASSWORD': 'paScPVSyFFHUAkQSpqQJwdGVcUBIApZH',
-        'HOST': 'autorack.proxy.rlwy.net',
-        'PORT': '39033',  # Обычно 5432 для PostgreSQL
+        'NAME': 'qrapp',
+        'USER': 'admin',
+        'PASSWORD': '26111304',
+        'HOST': '34.55.201.129',
+        'PORT': '5432',  # Обычно 5432 для PostgreSQL
     }
 }
 
@@ -141,6 +141,5 @@ TIME_ZONE = 'Asia/Almaty'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-AUTH_USER_MODEL = 'myapp.Person'
 
 
