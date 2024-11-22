@@ -28,7 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['34.55.201.129', '127.0.0.1', 'magical-primate-obviously.ngrok-free.app']
 CSRF_TRUSTED_ORIGINS = [
-    'magical-primate-obviously.ngrok-free.app',  # Ваш ngrok-домен
+    'https://magical-primate-obviously.ngrok-free.app',  # Ваш ngrok-домен
 ]
 
 
