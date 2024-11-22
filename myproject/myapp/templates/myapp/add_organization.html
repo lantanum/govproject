@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавить организацию{% endblock %}
+
+{% block content %}
+<style>
+    .add-organization-form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        margin-top: 20vh; /* Отступ сверху */
+    }
+
+    .add-organization-form input {
+        width: 100%;
+        max-width: 360px;
+        padding: 13px 15px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .add-organization-form button {
+        width: 100%;
+        max-width: 360px;
+        padding: 15px;
+        background-color: #5E37FF;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-top: 7vh;
+    }
+
+    .add-organization-form button:hover {
+        background-color: #4c2ecc;
+    }
+
+    .header {
+        background-color: #5E37FF;
+        color: white;
+        padding: 15px 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+        left: 0;
+    }
+
+    .header a {
+        position: absolute;
+        left: 20px;
+        color: white;
+        font-size: 20px;
+        text-decoration: none;
+    }
+
+    .header h1 {
+        font-size: 18px;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .error-message {
+        color: red;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+</style>
+
+<div class="header">
+    <a href="/children/profile/">
+        <i class="material-icons">arrow_back</i>
+    </a>
+    <h1>Добавить организацию</h1>
+</div>
+
+<form method="POST" class="add-organization-form">
+    {% csrf_token %}
+    {% if error %}
+        <div class="error-message">{{ error }}</div>
+    {% endif %}
+    <input type="text" name="organization_name" placeholder="Название организации" required>
+    <input type="text" name="director_username" placeholder="Логин руководителя" required>
+    <input type="password" name="password" placeholder="Придумайте пароль" required>
+    <input type="password" name="confirm_password" placeholder="Повторение пароля" required>
+    <button type="submit">Добавить организацию</button>
+</form>
+{% endblock %}

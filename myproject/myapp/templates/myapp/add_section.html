@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавить секцию{% endblock %}
+
+{% block content %}
+<style>
+    .add-section-form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        margin-top: 20vh; /* Отступ сверху */
+    }
+
+    .add-section-form input,
+    .add-section-form select {
+        width: 100%;
+        max-width: 360px;
+        padding: 13px 15px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .add-section-form button {
+        width: 100%;
+        max-width: 360px;
+        padding: 15px;
+        background-color: #5E37FF;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-top: 7vh;
+    }
+
+    .add-section-form button:hover {
+        background-color: #4c2ecc;
+    }
+
+    .header {
+        background-color: #5E37FF;
+        color: white;
+        padding: 15px 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+        left: 0;
+    }
+
+    .header a {
+        position: absolute;
+        left: 20px;
+        color: white;
+        font-size: 20px;
+        text-decoration: none;
+    }
+
+    .header h1 {
+        font-size: 18px;
+        font-weight: bold;
+        margin: 0;
+    }
+</style>
+
+<div class="header">
+    <a href="/children/profile/">
+        <i class="material-icons">arrow_back</i>
+    </a>
+    <h1>Добавить секцию</h1>
+</div>
+
+<form method="POST" class="add-section-form">
+    {% csrf_token %}
+    <input type="text" name="section_name" placeholder="Название секции" required>
+    <select name="schedule" required>
+        <option value="" disabled selected>Распорядок дня</option>
+        <option value="Утренний">Утренний</option>
+        <option value="Дневной">Дневной</option>
+        <option value="Вечерний">Вечерний</option>
+    </select>
+    <select name="time" required>
+        <option value="" disabled selected>Выбор времени</option>
+        <option value="08:00 - 10:00">08:00 - 10:00</option>
+        <option value="12:00 - 14:00">12:00 - 14:00</option>
+        <option value="18:00 - 20:00">18:00 - 20:00</option>
+    </select>
+    <button type="submit">Добавить секцию</button>
+</form>
+{% endblock %}
