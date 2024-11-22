@@ -14,46 +14,62 @@
 <!-- Место для отображения результата -->
 <p id="result"></p>
 
-<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
 
 <script>
     const html5QrCode = new Html5Qrcode("camera");
 
     // Функция для старта камеры
     document.getElementById('start-camera').addEventListener('click', () => {
-        // Запрашиваем доступ к камере и запускаем сканирование
-        html5QrCode.start(
-            { facingMode: "environment" }, // Использование задней камеры
-            {
-                fps: 10,  // Количество кадров в секунду
-                qrbox: 250  // Размер области для сканирования
-            },
-            qrCodeMessage => {
-                // Когда QR-код сканирован, отправляем его на сервер
-                fetch("", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": "{{ csrf_token }}",
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ qr_data: qrCodeMessage })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('result').innerText = "Посещение зарегистрировано!";
-                    } else {
-                        document.getElementById('result').innerText = "Ошибка: " + data.error;
-                    }
-                });
-            },
-            (errorMessage) => {
-                // Обработчик ошибок, например, если не удается сканировать
-                console.log(errorMessage);
-            }
-        ).catch(err => {
-            console.error("Ошибка при открытии камеры: ", err);
-        });
+        // Проверим, поддерживает ли устройство камеры
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            navigator.mediaDevices.enumerateDevices()
+            .then(devices => {
+                const videoDevices = devices.filter(device => device.kind === "videoinput");
+                if (videoDevices.length > 0) {
+                    // Запрашиваем доступ к камере и запускаем сканирование
+                    html5QrCode.start(
+                        { facingMode: "environment" }, // Использование задней камеры
+                        {
+                            fps: 10,  // Количество кадров в секунду
+                            qrbox: 250  // Размер области для сканирования
+                        },
+                        qrCodeMessage => {
+                            // Когда QR-код сканирован, отправляем его на сервер
+                            fetch("", {
+                                method: "POST",
+                                headers: {
+                                    "X-CSRFToken": "{{ csrf_token }}",
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({ qr_data: qrCodeMessage })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    document.getElementById('result').innerText = "Посещение зарегистрировано!";
+                                } else {
+                                    document.getElementById('result').innerText = "Ошибка: " + data.error;
+                                }
+                            });
+                        },
+                        (errorMessage) => {
+                            // Обработчик ошибок, например, если не удается сканировать
+                            console.log(errorMessage);
+                        }
+                    ).catch(err => {
+                        console.error("Ошибка при открытии камеры: ", err);
+                    });
+                } else {
+                    alert("Не удалось найти камеру. Убедитесь, что у вас есть доступ к камере.");
+                }
+            }).catch(err => {
+                console.error("Ошибка при доступе к камерам: ", err);
+                alert("Ошибка при доступе к камере.");
+            });
+        } else {
+            alert("Ваш браузер не поддерживает доступ к камере.");
+        }
     });
 </script>
 
