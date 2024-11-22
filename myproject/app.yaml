@@ -1,0 +1,5 @@
+runtime: python313  # Или python310
+entrypoint: gunicorn -b :$PORT myproject.wsgi
+env_variables:
+    DJANGO_SETTINGS_MODULE: "myproject.settings"
+    SECRET_KEY: "26111304"

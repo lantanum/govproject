@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Сканирование QR{% endblock %}
+
+{% block content %}
+<h2>Сканирование QR-кода</h2>
+<video id="camera" autoplay></video>
+<p id="result"></p>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    const html5QrCode = new Html5Qrcode("camera");
+    html5QrCode.start({ facingMode: "environment" }, {}, qrCodeMessage => {
+        fetch("", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({ qr_data: qrCodeMessage })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('result').innerText = "Посещение зарегистрировано!";
+            } else {
+                document.getElementById('result').innerText = "Ошибка: " + data.error;
+            }
+        });
+    });
+</script>
+{% endblock %}
