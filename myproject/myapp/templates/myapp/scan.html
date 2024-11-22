@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Генерация QR-кода{% endblock %}
+
+{% block content %}
+<h2>Ваш QR-код</h2>
+<div class="qr-container">
+    <div id="qr-code" class="qr-code"></div>
+    <button id="generate-qr">Сгенерировать QR-код</button>
+</div>
+<script>
+    document.getElementById('generate-qr').addEventListener('click', () => {
+        fetch("", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('qr-code').innerHTML = `<img src="data:image/png;base64,${data.qr_code}" alt="QR Code">`;
+            } else {
+                alert("Ошибка при генерации QR-кода.");
+            }
+        });
+    });
+</script>
+{% endblock %}
