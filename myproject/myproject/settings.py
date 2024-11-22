@@ -26,9 +26,9 @@ SECRET_KEY = 'django-insecure-6z1-mt2p#t+3_-#77q92b6^y7u*)yl&jt_oxyo4ybe)wr(se1a
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['34.55.201.129', '127.0.0.1', 'https://magical-primate-obviously.ngrok-free.app']
+ALLOWED_HOSTS = ['34.55.201.129', '127.0.0.1', 'magical-primate-obviously.ngrok-free.app']
 CSRF_TRUSTED_ORIGINS = [
-    'https://magical-primate-obviously.ngrok-free.app',  # Ваш ngrok-домен
+    'magical-primate-obviously.ngrok-free.app',  # Ваш ngrok-домен
 ]
 
 
