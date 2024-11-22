@@ -4,68 +4,57 @@
 
 {% block content %}
 <h2>Сканирование QR-кода</h2>
+
+<!-- Кнопка для запуска камеры -->
 <button id="start-camera">Запустить камеру</button>
-<video id="camera" autoplay width="100%" height="auto"></video>
-<canvas id="qr-canvas" style="display: none;"></canvas>
+
+<!-- Элемент для отображения видео с камеры -->
+<video id="camera" width="100%" height="auto" autoplay></video>
+
+<!-- Место для отображения результата -->
 <p id="result"></p>
 
+<script src="https://unpkg.com/html5-qrcode"></script>
+
 <script>
-    const startCameraButton = document.getElementById("start-camera");
-    const videoElement = document.getElementById("camera");
-    const canvas = document.getElementById("qr-canvas");
-    const resultElement = document.getElementById("result");
+    const html5QrCode = new Html5Qrcode("camera");
 
-    startCameraButton.addEventListener("click", () => {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                .then((stream) => {
-                    videoElement.srcObject = stream;
-                    videoElement.play();
-
-                    // Запуск логики сканирования QR-кода
-                    const qrScanner = setInterval(() => {
-                        const ctx = canvas.getContext("2d");
-                        canvas.width = videoElement.videoWidth;
-                        canvas.height = videoElement.videoHeight;
-                        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-
-                        // Используем стороннюю библиотеку jsQR
-                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
-
-                        if (qrCode) {
-                            clearInterval(qrScanner); // Останавливаем процесс сканирования
-                            resultElement.textContent = "QR-код найден: " + qrCode.data;
-
-                            // Отправляем данные QR-кода на сервер
-                            fetch("", {
-                                method: "POST",
-                                headers: {
-                                    "X-CSRFToken": "{{ csrf_token }}",
-                                    "Content-Type": "application/json"
-                                },
-                                body: JSON.stringify({ qr_data: qrCode.data })
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    resultElement.textContent = "Посещение зарегистрировано!";
-                                } else {
-                                    resultElement.textContent = "Ошибка: " + data.error;
-                                }
-                            });
-                        }
-                    }, 500); // Сканировать каждые 500 мс
+    // Функция для старта камеры
+    document.getElementById('start-camera').addEventListener('click', () => {
+        // Запрашиваем доступ к камере и запускаем сканирование
+        html5QrCode.start(
+            { facingMode: "environment" }, // Использование задней камеры
+            {
+                fps: 10,  // Количество кадров в секунду
+                qrbox: 250  // Размер области для сканирования
+            },
+            qrCodeMessage => {
+                // Когда QR-код сканирован, отправляем его на сервер
+                fetch("", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ qr_data: qrCodeMessage })
                 })
-                .catch((err) => {
-                    console.error("Ошибка при доступе к камере: ", err);
-                    alert("Не удалось получить доступ к камере.");
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('result').innerText = "Посещение зарегистрировано!";
+                    } else {
+                        document.getElementById('result').innerText = "Ошибка: " + data.error;
+                    }
                 });
-        } else {
-            alert("Ваш браузер не поддерживает доступ к камере.");
-        }
+            },
+            (errorMessage) => {
+                // Обработчик ошибок, например, если не удается сканировать
+                console.log(errorMessage);
+            }
+        ).catch(err => {
+            console.error("Ошибка при открытии камеры: ", err);
+        });
     });
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script> <!-- Подключаем jsQR -->
 {% endblock %}
