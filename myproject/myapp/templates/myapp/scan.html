@@ -7,7 +7,9 @@
 <div class="qr-container">
     <div id="qr-code" class="qr-code"></div>
     <button id="generate-qr">Сгенерировать QR-код</button>
+    <div id="timer"></div>
 </div>
+
 <script>
     document.getElementById('generate-qr').addEventListener('click', () => {
         fetch("", {
@@ -20,6 +22,23 @@
         .then(data => {
             if (data.success) {
                 document.getElementById('qr-code').innerHTML = `<img src="data:image/png;base64,${data.qr_code}" alt="QR Code">`;
+                
+                // Показать таймер
+                let expirationTime = new Date(data.expiration_time);
+                let timer = document.getElementById('timer');
+                let interval = setInterval(() => {
+                    let now = new Date();
+                    let timeLeft = expirationTime - now;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(interval);
+                        timer.innerHTML = "QR-код истек";
+                    } else {
+                        let minutes = Math.floor(timeLeft / 60000);
+                        let seconds = Math.floor((timeLeft % 60000) / 1000);
+                        timer.innerHTML = `Осталось: ${minutes}мин ${seconds}сек`;
+                    }
+                }, 1000);
             } else {
                 alert("Ошибка при генерации QR-кода.");
             }

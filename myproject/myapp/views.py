@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from .utils import generate_qr_code  # Импортир
+import time
 
 def main_view(request):
     # Список секций
@@ -34,8 +35,8 @@ def scan_view(request):
         # Генерация QR-кода для клиента
         if request.method == 'POST':
             qr_data = f"user:{request.user.username};time:{int(time.time())}"
-            qr_code = generate_qr_code(qr_data)  # Функция генерации QR-кода
-            return JsonResponse({'success': True, 'qr_code': qr_code})
+            qr_code, expiration_time = generate_qr_code(qr_data)  # Функция генерации QR-кода
+            return JsonResponse({'success': True, 'qr_code': qr_code, 'expiration_time': expiration_time})
         return render(request, 'myapp/scan.html')
 
     elif person.role == 'coach':

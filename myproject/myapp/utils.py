@@ -3,7 +3,7 @@ import io
 import base64
 from datetime import datetime, timedelta
 
-def generate_qr_code(data, expiration_minutes=10):
+def generate_qr_code(data, expiration_minutes=3):
     """
     Генерирует QR-код с уникальными данными и временем действия.
     """
@@ -23,4 +23,4 @@ def generate_qr_code(data, expiration_minutes=10):
     buffer.seek(0)
     img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-    return img_base64
+    return img_base64, expiration_time  # Возвращаем срок действия QR-кода

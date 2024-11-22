@@ -231,8 +231,10 @@ a:hover {
         </div>
     </div>
 
-    <!-- Кнопка выхода -->
-    <button class="logout-button">Выйти с профиля</button>
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="logout-button">Выйти с профиля</button>
+    </form>
 </div>
 
 <!-- Модальное окно -->
