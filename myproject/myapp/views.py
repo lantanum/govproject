@@ -124,6 +124,10 @@ def scan_view(request):
         if request.method == 'POST':
             qr_data = request.POST.get('qr_data')
 
+            # Проверка наличия данных в qr_data
+            if not qr_data:
+                return JsonResponse({'success': False, 'error': 'Данные QR-кода отсутствуют.'})
+
             try:
                 # Парсим qr_data
                 username = qr_data.split(';')[0].split(':')[1]
