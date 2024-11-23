@@ -3,14 +3,68 @@
 {% block title %}Генерация QR-кода{% endblock %}
 
 {% block content %}
-<h2>Ваш QR-код</h2>
-<div class="qr-container">
-    <div id="qr-code" class="qr-code"></div>
-    <button id="generate-qr">Сгенерировать QR-код</button>
-    <div id="timer"></div>
+<style>
+    .qr-page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background-color: #ffffff;
+        padding: 20px;
+    }
+
+    .qr-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #000000;
+        margin-bottom: 20px;
+    }
+
+    .qr-button {
+        background-color: #7d4df3;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 20px;
+        transition: background-color 0.3s ease;
+    }
+
+    .qr-button:hover {
+        background-color: #5b32c5;
+    }
+
+    .qr-display img {
+        max-width: 200px;
+        max-height: 200px;
+        margin-top: 10px;
+        border: 4px solid #7d4df3;
+        border-radius: 8px;
+    }
+
+    .timer-display {
+        margin-top: 10px;
+        font-size: 16px;
+        color: #333333;
+        font-weight: bold;
+        text-align: center;
+    }
+</style>
+
+<div class="qr-page">
+    <h2 class="qr-title">Ваш QR-код</h2>
+    <div id="qr-code" class="qr-display"></div>
+    <div id="timer" class="timer-display"></div>
+    <button id="generate-qr" class="qr-button">Сгенерировать QR-код</button>
 </div>
 
 <script>
+    let interval; // Переменная для хранения идентификатора текущего таймера
+
     document.getElementById('generate-qr').addEventListener('click', () => {
         fetch("{% url 'generate_qr' %}", {
             method: "POST",
@@ -18,32 +72,39 @@
                 "X-CSRFToken": "{{ csrf_token }}"
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Отображаем сгенерированный QR-код
-                document.getElementById('qr-code').innerHTML = `<img src="data:image/png;base64,${data.qr_code}" alt="QR Code">`;
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Отображаем сгенерированный QR-код
+                    document.getElementById(
+                        'qr-code'
+                    ).innerHTML = `<img src="data:image/png;base64,${data.qr_code}" alt="QR Code">`;
 
-                // Показать таймер
-                let expirationTime = new Date(data.expiration_time);
-                let timer = document.getElementById('timer');
-                let interval = setInterval(() => {
-                    let now = new Date();
-                    let timeLeft = expirationTime - now;
-
-                    if (timeLeft <= 0) {
+                    // Останавливаем предыдущий таймер, если он был запущен
+                    if (interval) {
                         clearInterval(interval);
-                        timer.innerHTML = "QR-код истек";
-                    } else {
-                        let minutes = Math.floor(timeLeft / 60000);
-                        let seconds = Math.floor((timeLeft % 60000) / 1000);
-                        timer.innerHTML = `Осталось: ${minutes}мин ${seconds}сек`;
                     }
-                }, 1000);
-            } else {
-                alert("Ошибка при генерации QR-кода.");
-            }
-        });
+
+                    // Показать таймер
+                    let expirationTime = new Date(data.expiration_time);
+                    let timer = document.getElementById('timer');
+                    interval = setInterval(() => {
+                        let now = new Date();
+                        let timeLeft = expirationTime - now;
+
+                        if (timeLeft <= 0) {
+                            clearInterval(interval);
+                            timer.innerHTML = "QR-код истек";
+                        } else {
+                            let minutes = Math.floor(timeLeft / 60000);
+                            let seconds = Math.floor((timeLeft % 60000) / 1000);
+                            timer.innerHTML = `Осталось: ${minutes}мин ${seconds}сек`;
+                        }
+                    }, 1000);
+                } else {
+                    alert("Ошибка при генерации QR-кода.");
+                }
+            });
     });
 </script>
 {% endblock %}
