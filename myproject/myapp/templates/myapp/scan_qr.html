@@ -9,52 +9,61 @@
 <button id="start-camera">Запустить камеру</button>
 
 <!-- Элемент для отображения видео с камеры -->
-<video id="camera" width="100%" height="auto" autoplay></video>
+<video id="camera" width="100%" height="auto" autoplay playsinline muted></video>
 
 <!-- Место для отображения результата -->
 <p id="result"></p>
 
-<script src="https://unpkg.com/html5-qrcode"></script>
-
 <script>
-    const html5QrCode = new Html5Qrcode("camera");
+    let videoStream;
 
-    // Функция для старта камеры
-    document.getElementById('start-camera').addEventListener('click', () => {
-        // Запрашиваем доступ к камере и запускаем сканирование
-        html5QrCode.start(
-            { facingMode: "environment" }, // Использование задней камеры
-            {
-                fps: 10,  // Количество кадров в секунду
-                qrbox: 250  // Размер области для сканирования
-            },
-            qrCodeMessage => {
-                // Когда QR-код сканирован, отправляем его на сервер
-                fetch("", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": "{{ csrf_token }}",
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ qr_data: qrCodeMessage })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('result').innerText = "Посещение зарегистрировано!";
-                    } else {
-                        document.getElementById('result').innerText = "Ошибка: " + data.error;
-                    }
-                });
-            },
-            (errorMessage) => {
-                // Обработчик ошибок, например, если не удается сканировать
-                console.log(errorMessage);
-            }
-        ).catch(err => {
-            console.error("Ошибка при открытии камеры: ", err);
-        });
+    // Функция для запуска камеры
+    document.getElementById('start-camera').addEventListener('click', async () => {
+        const cameraElement = document.getElementById('camera');
+
+        try {
+            // Запрашиваем доступ к камере
+            videoStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }, // Используем заднюю камеру
+                audio: false // Аудио не нужно
+            });
+
+            // Подключаем поток к видеоэлементу
+            cameraElement.srcObject = videoStream;
+
+            // Ожидаем, пока видео загрузится и начнет воспроизводиться
+            cameraElement.onloadedmetadata = () => {
+                cameraElement.play();
+            };
+
+            // QR-код: инициализация сканера (по желанию)
+            const html5QrCode = new Html5Qrcode("camera");
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                {
+                    fps: 10,  // Количество кадров в секунду
+                    qrbox: 250  // Размер области для сканирования
+                },
+                qrCodeMessage => {
+                    // Обработка QR-кода
+                    document.getElementById('result').innerText = `QR-код: ${qrCodeMessage}`;
+                },
+                errorMessage => {
+                    console.log("Ошибка при сканировании QR: ", errorMessage);
+                }
+            );
+        } catch (err) {
+            console.error("Ошибка при доступе к камере: ", err);
+            alert("Не удалось получить доступ к камере. Проверьте настройки браузера.");
+        }
     });
+
+    // Остановка камеры при необходимости (можно добавить кнопку)
+    function stopCamera() {
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+        }
+    }
 </script>
 
 {% endblock %}
