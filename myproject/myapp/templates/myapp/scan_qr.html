@@ -26,7 +26,7 @@
     }
 
     .qr-button {
-        background-color: #7d4df3;
+        background-color: #5E37FF;
         color: #ffffff;
         border: none;
         border-radius: 12px;
@@ -78,7 +78,7 @@
 </style>
 <div class="qr-page">
     <button id="start-camera" class="qr-button">Сканировать QR</button>
-    <video id="video" class="qr-video" autoplay></video>
+    <video id="video" class="qr-video" autoplay playsinline></video>
     <canvas id="canvas" style="display: none;"></canvas> <!-- Добавленный элемент -->
     <button id="stop-camera" class="qr-button stop-camera" style="display: none;">Остановить камеру</button>
     <p id="result" class="qr-result"></p>
