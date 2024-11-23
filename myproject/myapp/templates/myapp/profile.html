@@ -190,17 +190,18 @@ a:hover {
 <div class="profile">
     <!-- Аватар и информация -->
     <div class="profile-header">
-        <img src="https://via.placeholder.com/100" alt="Аватар">
+        <img src="{{ user.person.avatar.url }}" alt="Аватар">  <!-- Подставляем аватар текущего пользователя -->
         <div class="profile-details">
-            <p class="profile-name">Сапаров Султан</p>
-            <p class="profile-info"><span>Логин:</span> Saparov Sultan</p>
-            <p class="profile-info"><span>Организация:</span> KFC</p>
-            <p class="profile-info"><span>Роль:</span> Преподаватель</p>
+            <p class="profile-name">{{ user.username }}</p>  <!-- Имя пользователя -->
+            <p class="profile-info"><span>Логин:</span> {{ user.username }}</p> <!-- Логин -->
+            <p class="profile-info"><span>Организация:</span> {{ user.person.organization }}</p> <!-- Организация пользователя -->
+            <p class="profile-info"><span>Роль:</span> {{ user.person.get_role_display }}</p> <!-- Роль пользователя -->
         </div>
     </div>
 
     <!-- Действия -->
     <div class="profile-actions">
+        <!-- Ссылка на поддержку видна всем пользователям -->
         <div class="action-item" onclick="showModal()">
             <span>
                 <i class="material-icons">chat</i>
@@ -208,6 +209,9 @@ a:hover {
             </span>
             <i class="material-icons">chevron_right</i>
         </div>
+
+        <!-- Доступно только руководителям и администраторам -->
+        {% if user.person.role == 'director' %}
         <div class="action-item">
             <span>
                 <i class="material-icons">person_add</i>
@@ -222,6 +226,10 @@ a:hover {
             </span>
             <i class="material-icons">chevron_right</i>
         </div>
+        {% endif %}
+
+        <!-- Доступно только администраторам -->
+        {% if user.person.role == 'admin' %}
         <div class="action-item">
             <span>
                 <i class="material-icons">business</i>
@@ -229,6 +237,18 @@ a:hover {
             </span>
             <i class="material-icons">chevron_right</i>
         </div>
+        {% endif %}
+
+        <!-- Доступно только тренерам -->
+        {% if user.person.role == 'coach' %}
+        <div class="action-item">
+            <span>
+                <i class="material-icons">group_add</i>
+                <a href="{% url 'add_client' %}">Добавить клиента</a>
+            </span>
+            <i class="material-icons">chevron_right</i>
+        </div>
+        {% endif %}
     </div>
 
     <form action="{% url 'logout' %}" method="post">

@@ -12,8 +12,7 @@
         margin-top: 20vh; /* Отступ сверху */
     }
 
-    .add-section-form input,
-    .add-section-form select {
+    .add-section-form input {
         width: 100%;
         max-width: 360px;
         padding: 13px 15px;
@@ -81,18 +80,18 @@
 <form method="POST" class="add-section-form">
     {% csrf_token %}
     <input type="text" name="section_name" placeholder="Название секции" required>
-    <select name="schedule" required>
-        <option value="" disabled selected>Распорядок дня</option>
-        <option value="Утренний">Утренний</option>
-        <option value="Дневной">Дневной</option>
-        <option value="Вечерний">Вечерний</option>
-    </select>
-    <select name="time" required>
-        <option value="" disabled selected>Выбор времени</option>
-        <option value="08:00 - 10:00">08:00 - 10:00</option>
-        <option value="12:00 - 14:00">12:00 - 14:00</option>
-        <option value="18:00 - 20:00">18:00 - 20:00</option>
-    </select>
+    
+    <!-- Ввод времени начала и конца -->
+    <input type="time" name="start_time" required>
+    <input type="time" name="end_time" required>
+
     <button type="submit">Добавить секцию</button>
 </form>
+
+{% if error %}
+    <div style="color: red; margin-top: 20px;">
+        {{ error }}
+    </div>
+{% endif %}
+
 {% endblock %}

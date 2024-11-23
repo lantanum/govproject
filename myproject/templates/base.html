@@ -18,6 +18,40 @@
             padding-bottom: 60px; /* Оставляем место для фиксированной навигационной панели */
         }
 
+        /* Стили для сообщений */
+        .messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .messages .success {
+            color: #4CAF50;
+            background-color: #DFF2BF;
+            padding: 10px;
+            border: 1px solid #4CAF50;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .messages .error {
+            color: #FF0000;
+            background-color: #FFBABA;
+            padding: 10px;
+            border: 1px solid #FF0000;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .messages .info {
+            color: #00529B;
+            background-color: #BDE5F8;
+            padding: 10px;
+            border: 1px solid #00529B;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
         /* Навигационная панель */
         .navigation {
             display: flex;
@@ -63,6 +97,15 @@
     </style>
 </head>
 <body>
+    <!-- Сообщения -->
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
     <!-- Основной контент страницы -->
     <div class="content">
         {% block content %}

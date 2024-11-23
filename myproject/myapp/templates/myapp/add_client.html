@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}Добавить организацию{% endblock %}
+{% block title %}Добавить клиента{% endblock %}
 
 {% block content %}
 <style>
-    .add-organization-form {
+    .add-client-form {
         display: flex;
         flex-direction: column;
         align-items: center;
         padding: 20px;
-        margin-top: 20vh;
+        margin-top: 20vh; /* Отступ сверху */
     }
 
-    .add-organization-form input {
+    .add-client-form input {
         width: 100%;
         max-width: 360px;
         padding: 13px 15px;
@@ -22,7 +22,7 @@
         font-size: 16px;
     }
 
-    .add-organization-form button {
+    .add-client-form button {
         width: 100%;
         max-width: 360px;
         padding: 15px;
@@ -37,7 +37,7 @@
         margin-top: 7vh;
     }
 
-    .add-organization-form button:hover {
+    .add-client-form button:hover {
         background-color: #4c2ecc;
     }
 
@@ -68,30 +68,28 @@
         font-weight: bold;
         margin: 0;
     }
-
-    .error-message {
-        color: red;
-        font-size: 14px;
-        margin-bottom: 10px;
-    }
 </style>
 
 <div class="header">
     <a href="/myapp/profile/">
         <i class="material-icons">arrow_back</i>
     </a>
-    <h1>Добавить организацию</h1>
+    <h1>Добавить клиента</h1>
 </div>
 
-<form method="POST" class="add-organization-form">
+<form method="POST" enctype="multipart/form-data" class="add-client-form">
     {% csrf_token %}
-    {% if error %}
-        <div class="error-message">{{ error }}</div>
-    {% endif %}
-    <input type="text" name="organization_name" placeholder="Название организации" required>
-    <input type="text" name="director_username" placeholder="Логин руководителя" required>
-    <input type="password" name="password" placeholder="Придумайте пароль" required>
-    <input type="password" name="confirm_password" placeholder="Повторение пароля" required>
-    <button type="submit">Добавить организацию</button>
+    <input type="text" name="username" placeholder="Введите логин клиента" required>
+    <input type="password" name="password" placeholder="Введите пароль" required>
+    <input type="file" name="photo" accept="image/*" placeholder="Прикрепите фото" required>
+    
+    <label for="sections">Выберите секции:</label>
+    <select name="sections" id="sections" multiple required>
+        {% for section in sections %}
+            <option value="{{ section.id }}">{{ section.name }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Добавить клиента</button>
 </form>
 {% endblock %}
