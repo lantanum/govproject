@@ -3,27 +3,89 @@
 {% block title %}Сканирование QR{% endblock %}
 
 {% block content %}
-<h2>Сканирование QR-кода</h2>
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: #000000;
+    }
 
-<!-- Кнопки управления камерой -->
-<button id="start-camera">Запустить камеру</button>
-<button id="stop-camera" style="display: none;">Остановить камеру</button>
+    .qr-page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 20px;
+        background-color: #ffffff;
+    }
 
-<!-- Элемент для отображения видео -->
-<video id="video" width="100%" height="auto" style="display: none;" autoplay></video>
+    .qr-button {
+        background-color: #7d4df3;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 20px;
+        transition: background-color 0.3s ease;
+        width: 80%;
+        text-align: center;
+    }
 
-<!-- Элемент для отображения канвы -->
-<canvas id="canvas" style="display: none;"></canvas>
+    .qr-button:hover {
+        background-color: #5b32c5;
+    }
 
-<!-- Место для отображения результата -->
-<p id="result"></p>
+    .qr-video {
+        width: 80%;
+        height: auto;
+        margin-top: 20px;
+        border: 4px solid #7d4df3;
+        border-radius: 12px;
+        display: none;
+    }
 
-<!-- Кнопка для регистрации посещения -->
-<button id="mark-attendance" style="display: none;"></button>
+    .qr-video.active {
+        display: block;
+    }
 
-<!-- Сообщение об успешной регистрации посещения -->
-<p id="attendance-message" style="display: none;">Отметка успешно проставлена!</p>
-<button id="go-back" style="display: none;" onclick="window.location.href='/scan/'">Далее</button>
+    .stop-camera {
+        background-color: #f04d4d;
+        margin-top: 10px;
+    }
+
+    .qr-result {
+        font-size: 16px;
+        color: #333333;
+        margin-top: 10px;
+        text-align: center;
+    }
+
+    .success-message {
+        font-size: 16px;
+        color: #4caf50;
+        margin-top: 20px;
+        text-align: center;
+    }
+</style>
+<div class="qr-page">
+    <button id="start-camera" class="qr-button">Сканировать QR</button>
+    <video id="video" class="qr-video" autoplay></video>
+    <canvas id="canvas" style="display: none;"></canvas> <!-- Добавленный элемент -->
+    <button id="stop-camera" class="qr-button stop-camera" style="display: none;">Остановить камеру</button>
+    <p id="result" class="qr-result"></p>
+    <button id="mark-attendance" class="qr-button mark-attendance" style="display: none;"></button>
+    <p id="attendance-message" class="success-message" style="display: none;">Отметка успешно проставлена!</p>
+    <button id="go-back" class="qr-button" style="display: none;" onclick="window.location.href='/scan/'">Далее</button>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
 
@@ -119,21 +181,21 @@
                     visit_date: visitDate
                 })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Показать сообщение об успехе и скрыть кнопку
-                    attendanceMessage.style.display = "block";
-                    markAttendanceButton.style.display = "none";
-                    goBackButton.style.display = "block";
-                } else {
-                    alert("Ошибка при регистрации посещения: " + data.error);
-                }
-            })
-            .catch(err => {
-                console.error("Ошибка при регистрации посещения:", err);
-                alert("Ошибка при регистрации посещения.");
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Показать сообщение об успехе и скрыть кнопку
+                        attendanceMessage.style.display = "block";
+                        markAttendanceButton.style.display = "none";
+                        goBackButton.style.display = "block";
+                    } else {
+                        alert("Ошибка при регистрации посещения: " + data.error);
+                    }
+                })
+                .catch(err => {
+                    console.error("Ошибка при регистрации посещения:", err);
+                    alert("Ошибка при регистрации посещения.");
+                });
         };
 
         // Функция для остановки камеры
@@ -156,5 +218,4 @@
         window.addEventListener("beforeunload", stopCamera);
     });
 </script>
-
 {% endblock %}
