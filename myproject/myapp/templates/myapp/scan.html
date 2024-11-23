@@ -12,7 +12,7 @@
 
 <script>
     document.getElementById('generate-qr').addEventListener('click', () => {
-        fetch("", {
+        fetch("{% url 'generate_qr' %}", {
             method: "POST",
             headers: {
                 "X-CSRFToken": "{{ csrf_token }}"
@@ -21,8 +21,9 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // Отображаем сгенерированный QR-код
                 document.getElementById('qr-code').innerHTML = `<img src="data:image/png;base64,${data.qr_code}" alt="QR Code">`;
-                
+
                 // Показать таймер
                 let expirationTime = new Date(data.expiration_time);
                 let timer = document.getElementById('timer');

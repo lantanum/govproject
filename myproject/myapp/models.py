@@ -1,6 +1,7 @@
+# models.py
+
 from django.db import models
 from django.contrib.auth.models import User
-
 
 class Organization(models.Model):
     name = models.CharField(max_length=255)
@@ -31,3 +32,13 @@ class Person(models.Model):
 
     def __str__(self):
         return f"{self.user.username} ({self.get_role_display()})"
+
+
+class Attendance(models.Model):
+    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='attendances')
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='attendances')
+    visit_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Посещение {self.person.user.username} на секции {self.section.name} - {self.visit_date}"

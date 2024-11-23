@@ -9,4 +9,6 @@ urlpatterns = [
     path('add_section/', views.add_section, name='add_section'),
     path('add_employee/', views.add_employee, name='add_employee'),
     path('add_organization/', views.add_organization, name='add_organization'),
+    path('mark-attendance/', views.mark_attendance, name='mark_attendance'),
+    path('generate-qr/', views.generate_qr, name='generate_qr'),
 ]

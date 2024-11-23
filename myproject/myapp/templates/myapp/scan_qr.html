@@ -5,65 +5,156 @@
 {% block content %}
 <h2>Сканирование QR-кода</h2>
 
-<!-- Кнопка для запуска камеры -->
+<!-- Кнопки управления камерой -->
 <button id="start-camera">Запустить камеру</button>
+<button id="stop-camera" style="display: none;">Остановить камеру</button>
 
-<!-- Элемент для отображения видео с камеры -->
-<video id="camera" width="100%" height="auto" autoplay playsinline muted></video>
+<!-- Элемент для отображения видео -->
+<video id="video" width="100%" height="auto" style="display: none;" autoplay></video>
+
+<!-- Элемент для отображения канвы -->
+<canvas id="canvas" style="display: none;"></canvas>
 
 <!-- Место для отображения результата -->
 <p id="result"></p>
 
+<!-- Кнопка для регистрации посещения -->
+<button id="mark-attendance" style="display: none;"></button>
+
+<!-- Сообщение об успешной регистрации посещения -->
+<p id="attendance-message" style="display: none;">Отметка успешно проставлена!</p>
+<button id="go-back" style="display: none;" onclick="window.location.href='/scan/'">Далее</button>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
+
 <script>
-    let videoStream;
+    document.addEventListener("DOMContentLoaded", () => {
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const result = document.getElementById("result");
+        const startCameraButton = document.getElementById("start-camera");
+        const stopCameraButton = document.getElementById("stop-camera");
+        const markAttendanceButton = document.getElementById("mark-attendance");
+        const attendanceMessage = document.getElementById("attendance-message");
+        const goBackButton = document.getElementById("go-back");
+        const canvasContext = canvas.getContext("2d");
 
-    // Функция для запуска камеры
-    document.getElementById('start-camera').addEventListener('click', async () => {
-        const cameraElement = document.getElementById('camera');
+        let videoStream = null;
+        let scanning = false;
 
-        try {
-            // Запрашиваем доступ к камере
-            videoStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' }, // Используем заднюю камеру
-                audio: false // Аудио не нужно
-            });
+        // Функция для запуска камеры
+        const startCamera = () => {
+            navigator.mediaDevices
+                .getUserMedia({ video: { facingMode: "environment" } })
+                .then((stream) => {
+                    videoStream = stream;
+                    video.srcObject = stream;
+                    video.style.display = "block";
+                    stopCameraButton.style.display = "inline-block";
+                    startCameraButton.style.display = "none";
+                    scanning = true;
+                    scanQRCode();
+                })
+                .catch((err) => {
+                    console.error("Ошибка доступа к камере:", err);
+                    alert("Не удалось получить доступ к камере.");
+                });
+        };
 
-            // Подключаем поток к видеоэлементу
-            cameraElement.srcObject = videoStream;
+        // Функция для сканирования QR-кода
+        const scanQRCode = () => {
+            if (!videoStream) return;
 
-            // Ожидаем, пока видео загрузится и начнет воспроизводиться
-            cameraElement.onloadedmetadata = () => {
-                cameraElement.play();
+            const drawFrame = () => {
+                if (scanning && video.readyState === video.HAVE_ENOUGH_DATA) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+                    const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
+
+                    if (qrCode) {
+                        // QR-код успешно считан
+                        result.textContent = `QR-код: ${qrCode.data}`;
+
+                        // Останавливаем сканирование
+                        scanning = false;
+                        stopCamera();
+
+                        // Генерируем текущую дату
+                        const currentDate = new Date().toLocaleDateString();
+
+                        // Отображаем кнопку для отметки посещения
+                        markAttendanceButton.textContent = `Отметить посещение за ${currentDate}`;
+                        markAttendanceButton.style.display = "block";
+
+                        // Добавляем обработчик на кнопку
+                        markAttendanceButton.onclick = () => {
+                            registerAttendance(qrCode.data, currentDate);
+                        };
+                        return;
+                    }
+                }
+
+                if (scanning) {
+                    requestAnimationFrame(drawFrame);
+                }
             };
 
-            // QR-код: инициализация сканера (по желанию)
-            const html5QrCode = new Html5Qrcode("camera");
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                {
-                    fps: 10,  // Количество кадров в секунду
-                    qrbox: 250  // Размер области для сканирования
-                },
-                qrCodeMessage => {
-                    // Обработка QR-кода
-                    document.getElementById('result').innerText = `QR-код: ${qrCodeMessage}`;
-                },
-                errorMessage => {
-                    console.log("Ошибка при сканировании QR: ", errorMessage);
-                }
-            );
-        } catch (err) {
-            console.error("Ошибка при доступе к камере: ", err);
-            alert("Не удалось получить доступ к камере. Проверьте настройки браузера.");
-        }
-    });
+            drawFrame();
+        };
 
-    // Остановка камеры при необходимости (можно добавить кнопку)
-    function stopCamera() {
-        if (videoStream) {
-            videoStream.getTracks().forEach(track => track.stop());
-        }
-    }
+        // Функция для регистрации посещения
+        const registerAttendance = (qrCodeData, visitDate) => {
+            fetch("/mark-attendance/", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    qr_data: qrCodeData,
+                    visit_date: visitDate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Показать сообщение об успехе и скрыть кнопку
+                    attendanceMessage.style.display = "block";
+                    markAttendanceButton.style.display = "none";
+                    goBackButton.style.display = "block";
+                } else {
+                    alert("Ошибка при регистрации посещения: " + data.error);
+                }
+            })
+            .catch(err => {
+                console.error("Ошибка при регистрации посещения:", err);
+                alert("Ошибка при регистрации посещения.");
+            });
+        };
+
+        // Функция для остановки камеры
+        const stopCamera = () => {
+            if (videoStream) {
+                videoStream.getTracks().forEach((track) => track.stop());
+                videoStream = null;
+            }
+            video.style.display = "none";
+            stopCameraButton.style.display = "none";
+            startCameraButton.style.display = "inline-block";
+            scanning = false;
+        };
+
+        // Привязываем кнопки к функциям
+        startCameraButton.addEventListener("click", startCamera);
+        stopCameraButton.addEventListener("click", stopCamera);
+
+        // Останавливаем камеру при закрытии страницы
+        window.addEventListener("beforeunload", stopCamera);
+    });
 </script>
 
 {% endblock %}
