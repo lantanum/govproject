@@ -79,9 +79,9 @@
 <div class="qr-page">
     <button id="start-camera" class="qr-button">Сканировать QR</button>
     <video id="video" class="qr-video" autoplay playsinline></video>
-    <canvas id="canvas" style="display: none;"></canvas> <!-- Добавленный элемент -->
+    <canvas id="canvas" style="display: none;"></canvas>
     <button id="stop-camera" class="qr-button stop-camera" style="display: none;">Остановить камеру</button>
-    <p id="result" class="qr-result"></p>
+    <p id="user-name" class="qr-result" style="font-weight: bold; display: none;"></p>
     <button id="mark-attendance" class="qr-button mark-attendance" style="display: none;"></button>
     <p id="attendance-message" class="success-message" style="display: none;">Отметка успешно проставлена!</p>
     <button id="go-back" class="qr-button" style="display: none;" onclick="window.location.href='/scan/'">Далее</button>
@@ -93,7 +93,7 @@
     document.addEventListener("DOMContentLoaded", () => {
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
-        const result = document.getElementById("result");
+        const userNameDisplay = document.getElementById("user-name");
         const startCameraButton = document.getElementById("start-camera");
         const stopCameraButton = document.getElementById("stop-camera");
         const markAttendanceButton = document.getElementById("mark-attendance");
@@ -103,6 +103,7 @@
 
         let videoStream = null;
         let scanning = false;
+        let parsedData = null;
 
         // Функция для запуска камеры
         const startCamera = () => {
@@ -139,24 +140,39 @@
 
                     if (qrCode) {
                         // QR-код успешно считан
-                        result.textContent = `QR-код: ${qrCode.data}`;
-
-                        // Останавливаем сканирование
                         scanning = false;
                         stopCamera();
 
-                        // Генерируем текущую дату
-                        const currentDate = new Date().toLocaleDateString();
+                        // Отправляем запрос на сервер для получения данных
+                        fetch("/scan/", {
+                            method: "POST",
+                            headers: {
+                                "X-CSRFToken": "{{ csrf_token }}",
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ qr_data: qrCode.data }),
+                        })
+                            .then((response) => response.json())
+                            .then((data) => {
+                                if (data.success) {
+                                    parsedData = data; // Сохраняем данные
+                                    userNameDisplay.textContent = `Пользователь: ${data.username}`;
+                                    userNameDisplay.style.display = "block";
 
-                        // Отображаем кнопку для отметки посещения
-                        markAttendanceButton.textContent = `Отметить посещение за ${currentDate}`;
-                        markAttendanceButton.style.display = "block";
+                                    markAttendanceButton.textContent = `Поставить отметку за ${new Date().toLocaleDateString()}`;
+                                    markAttendanceButton.style.display = "block";
 
-                        // Добавляем обработчик на кнопку
-                        markAttendanceButton.onclick = () => {
-                            registerAttendance(qrCode.data, currentDate);
-                        };
-                        return;
+                                    markAttendanceButton.onclick = () => {
+                                        registerAttendance(parsedData.user_id, parsedData.sections[0].id);
+                                    };
+                                } else {
+                                    alert("Ошибка: " + data.error);
+                                }
+                            })
+                            .catch((err) => {
+                                console.error("Ошибка:", err);
+                                alert("Ошибка при обработке QR-кода.");
+                            });
                     }
                 }
 
@@ -168,32 +184,28 @@
             drawFrame();
         };
 
-        // Функция для регистрации посещения
-        const registerAttendance = (qrCodeData, visitDate) => {
+        const registerAttendance = (userId, sectionId) => {
             fetch("/mark-attendance/", {
                 method: "POST",
                 headers: {
                     "X-CSRFToken": "{{ csrf_token }}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    qr_data: qrCodeData,
-                    visit_date: visitDate
-                })
+                body: JSON.stringify({ user_id: userId, section_id: sectionId }),
             })
-                .then(response => response.json())
-                .then(data => {
+                .then((response) => response.json())
+                .then((data) => {
                     if (data.success) {
-                        // Показать сообщение об успехе и скрыть кнопку
+                        attendanceMessage.textContent = data.message;
                         attendanceMessage.style.display = "block";
                         markAttendanceButton.style.display = "none";
                         goBackButton.style.display = "block";
                     } else {
-                        alert("Ошибка при регистрации посещения: " + data.error);
+                        alert("Ошибка: " + data.error);
                     }
                 })
-                .catch(err => {
-                    console.error("Ошибка при регистрации посещения:", err);
+                .catch((err) => {
+                    console.error("Ошибка:", err);
                     alert("Ошибка при регистрации посещения.");
                 });
         };
@@ -210,11 +222,8 @@
             scanning = false;
         };
 
-        // Привязываем кнопки к функциям
         startCameraButton.addEventListener("click", startCamera);
         stopCameraButton.addEventListener("click", stopCamera);
-
-        // Останавливаем камеру при закрытии страницы
         window.addEventListener("beforeunload", stopCamera);
     });
 </script>

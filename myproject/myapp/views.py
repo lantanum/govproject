@@ -123,30 +123,33 @@ def scan_view(request):
         # Страница для сканирования QR для тренера
         if request.method == 'POST':
             qr_data = request.POST.get('qr_data')
-            # Парсим qr_data и находим информацию
+
             try:
+                # Парсим qr_data
                 username = qr_data.split(';')[0].split(':')[1]
                 user = User.objects.get(username=username)
                 client_person = user.person  # Получаем Person клиента
 
-                # Определяем первую секцию, связанную с организацией пользователя
-                section = Section.objects.filter(organization=client_person.organization).first()
+                # Получаем секции, связанные с пользователем
+                sections = Section.objects.filter(organization=client_person.organization)
 
-                if not section:
-                    return JsonResponse({'success': False, 'error': 'Секция не найдена.'})
+                if not sections.exists():
+                    return JsonResponse({'success': False, 'error': 'Секции для пользователя не найдены.'})
 
-                # Создаем запись о посещении
-                attendance = Attendance.objects.create(
-                    person=client_person,
-                    section=section,
-                    visit_date=date.today()
-                )
+                # Возвращаем информацию о пользователе и секциях
+                sections_data = [
+                    {"id": section.id, "name": section.name, "start_time": section.start_time, "end_time": section.end_time}
+                    for section in sections
+                ]
 
                 return JsonResponse({
                     'success': True,
-                    'message': f"Посещение за {date.today()} зарегистрировано для {client_person.user.username} на секции {section.name}"
+                    'username': client_person.user.username,
+                    'sections': sections_data
                 })
 
+            except User.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Пользователь не найден.'})
             except Exception as e:
                 return JsonResponse({'success': False, 'error': str(e)})
 
@@ -157,30 +160,44 @@ def scan_view(request):
 def mark_attendance(request):
     if request.method == "POST":
         try:
+            # Извлечение данных из запроса
             data = json.loads(request.body)
-            qr_data = data.get('qr_data')
-            visit_date = data.get('visit_date')
+            user_id = data.get("user_id")
+            section_id = data.get("section_id")
 
-            if not qr_data or not visit_date:
-                return JsonResponse({"success": False, "error": "Неверные данные."})
+            if not user_id or not section_id:
+                return JsonResponse({"success": False, "error": "Отсутствуют необходимые данные."})
 
-            # Преобразуем дату
-            visit_date_parsed = parse_date(visit_date)
+            # Получаем пользователя
+            try:
+                person = Person.objects.get(user__id=user_id)
+            except Person.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Пользователь не найден."})
 
-            # Получаем первую секцию, привязанную к пользователю
-            section = Section.objects.filter(organization=request.user.person.organization).first()
+            # Получаем секцию
+            try:
+                section = Section.objects.get(id=section_id)
+            except Section.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Секция не найдена."})
 
-            if section:
-                # Создаем запись о посещении
-                Attendance.objects.create(
-                    user=request.user,
-                    section=section,
-                    visit_date=visit_date_parsed,
-                    qr_data=qr_data
-                )
-                return JsonResponse({"success": True})
+            # Проверяем, разрешена ли отметка в это время
+            current_time = localtime().time()
+            if not (section.start_time <= current_time <= section.end_time):
+                return JsonResponse({"success": False, "error": "Сейчас занятий нет."})
 
-            return JsonResponse({"success": False, "error": "Не найдена секция для пользователя."})
+            # Создаем отметку
+            Attendance.objects.create(
+                person=person,
+                section=section,
+                visit_date=localtime().date()
+            )
+
+            return JsonResponse({
+                "success": True,
+                "message": f"Посещение зарегистрировано для {person.user.username} в секции {section.name}.",
+                "username": person.user.username,
+                "section_name": section.name,
+            })
 
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
