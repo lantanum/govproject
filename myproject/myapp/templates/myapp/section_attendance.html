@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Посещения - {{ section.name }}{% endblock %}
+
+{% block content %}
+<div class="header">
+    <a href="/" class="back-button">← Назад</a>
+    <h1>{{ section.name }} - Отметки</h1>
+</div>
+
+<div class="content">
+    <h2>Посещения на {{ selected_date }}</h2>
+    
+    <!-- Фильтр по дате -->
+    <form method="get">
+        <label for="date">Выберите дату:</label>
+        <input type="date" id="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()">
+    </form>
+
+    <!-- Таблица посещений -->
+    <table class="attendance-table">
+        <thead>
+            <tr>
+                <th>ФИО</th>
+                <th>Дата посещения</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for attendance in attendances %}
+            <tr>
+                <td>{{ attendance.person.user.first_name }} {{ attendance.person.user.last_name }}</td>
+                <td>{{ attendance.visit_date }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2">Нет посещений на выбранную дату.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

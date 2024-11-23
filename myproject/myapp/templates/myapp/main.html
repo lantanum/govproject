@@ -7,46 +7,57 @@
     .sections {
         display: flex;
         flex-direction: column;
-        align-items: center; /* Центрируем кнопки горизонтально */
-        justify-content: center; /* Центрируем кнопки вертикально */
-        height: calc(100vh - 100px); /* Учитываем высоту нижней навигации */
+        align-items: center;
+        justify-content: center;
+        height: calc(100vh - 100px);
         margin: 0 auto;
         padding: 0;
     }
 
     .section-button {
         display: block;
-        width: 90%; /* Кнопки занимают 90% ширины экрана */
-        max-width: 28vh; /* Максимальная ширина кнопок */
-        margin: 14px 25px; /* Расстояние между кнопками */
-        padding: 55px; /* Высота кнопок */
+        width: 90%;
+        max-width: 28vh;
+        margin: 14px 25px;
+        padding: 55px;
         background-color: #5E37FF;
         color: white;
         border: none;
-        border-radius: 15px; /* Закругленные углы */
-        font-size: 27px; /* Размер текста */
-        font-weight: bold; /* Жирный текст */
+        border-radius: 15px;
+        font-size: 20px;
+        font-weight: bold;
         text-align: center;
         cursor: pointer;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Легкая тень */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         transition: transform 0.2s ease, background-color 0.3s ease;
     }
 
     .section-button:hover {
-        background-color: #4A2DBA; /* Цвет при наведении */
-        transform: translateY(-2px); /* Легкое поднятие при наведении */
+        background-color: #4A2DBA;
+        transform: translateY(-2px);
     }
 
     .section-button:active {
-         transform: translateY(1px); /*Легкое нажатие ывфывыфвыфвыфвыфвыф тест тест */
+        transform: translateY(1px);
+    }
+
+    a {
+        text-decoration: none;
     }
 </style>
 
 <div class="sections">
     {% for section in sections %}
-    <a href="/myapp{{ section.url }}">
-        <button class="section-button">{{ section.name }}</button>
+    <a href="{% url 'section_attendance' section.id %}">
+        <button class="section-button">
+            {{ section.name }}<br>
+            <span style="font-size: 16px; font-weight: normal;">
+                {{ section.start_time|date:"H:i" }} - {{ section.end_time|date:"H:i" }}
+            </span>
+        </button>
     </a>
+    {% empty %}
+    <p>Нет доступных секций для отображения.</p>
     {% endfor %}
 </div>
 {% endblock %}

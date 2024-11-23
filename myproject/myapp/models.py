@@ -23,6 +23,7 @@ class Section(models.Model):
     start_time = models.TimeField(default="00:00")
     end_time = models.TimeField(default="23:59")  # default time, change as needed
     organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='sections')
+    
 
     def __str__(self):
         return f"{self.name} ({self.start_time} - {self.end_time})"

@@ -1,10 +1,9 @@
-import datetime
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 from .utils import generate_qr_code  # Импортир
 from .models import Organization, Section, Person, Attendance
 import time
-from datetime import date
+from datetime import date, datetime
 from datetime import timedelta
 from io import BytesIO
 from django.contrib.auth.models import User
@@ -12,28 +11,47 @@ from django.contrib.auth.hashers import make_password
 from django.contrib import messages
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
+from django.utils.timezone import now
 
 def main_view(request):
-    # Список секций
-    sections = [
-        {'name': 'Бокс', 'url': '/section/boxing/'},
-        {'name': 'Каратэ', 'url': '/section/karate/'},
-        {'name': 'Дзюдо', 'url': '/section/judo/'},
-        {'name': 'Борьба', 'url': '/section/wrestling/'},
-    ]
+    sections = []
+    
+    user_person = request.user.person
+    
+    if user_person.role == 'client':  # Для клиента показываем только его привязанные секции
+        sections = Section.objects.filter(participants=user_person)  # Используем связь ManyToMany с участниками
+    elif user_person.role in ['coach', 'director']:  # Для тренера и директора показываем все секции его организации
+        organization = user_person.organization
+        sections = Section.objects.filter(organization=organization)
+
     return render(request, 'myapp/main.html', {'sections': sections})
 
 
-def boxing_view(request):
-    students = [
-        {'id': 1, 'name': 'Акимжанов Ануар Акимжанович'},
-        {'id': 2, 'name': 'Акимжанов Ануар Акимжанович'},
-        {'id': 3, 'name': 'Акимжанов Ануар Акимжанович'},
-        {'id': 4, 'name': 'Акимжанов Ануар Акимжанович'},
-        {'id': 5, 'name': 'Акимжанов Ануар Акимжанович'},
-        {'id': 6, 'name': 'Акимжанов Ануар Акимжанович'},
-    ]
-    return render(request, 'myapp/boxing.html', {'students': students})
+def section_attendance(request, section_id):
+    section = Section.objects.get(id=section_id)
+    selected_date = request.GET.get('date', None)
+
+    # Получаем пользователя, чтобы определить его роль
+    user = request.user
+    person = user.person
+    role = user.person.role  # Предположим, что роль хранится в профиле пользователя
+
+    # Фильтрация посещений в зависимости от роли пользователя
+    if role == "client":
+        attendances = Attendance.objects.filter(person=user.person, section=section)
+    else:
+        # Для тренера и директора отображаются все посещения в данной секции
+        attendances = Attendance.objects.filter(section=section)
+
+    # Если выбрана дата, фильтруем по ней
+    if selected_date:
+        attendances = attendances.filter(visit_date=selected_date)
+
+    return render(request, 'myapp/section_attendance.html', {
+        'section': section,
+        'attendances': attendances,
+        'selected_date': selected_date
+    })
 
 def add_client(request):
     # Проверяем, что пользователь - тренер
@@ -67,10 +85,6 @@ def add_client(request):
             section = Section.objects.get(id=section_id)
             person.sections.add(section)
 
-        # Если есть фото, сохраняем его
-        if photo:
-            person.profile.avatar = photo
-            person.profile.save()
 
         # Сохраняем изменения
         person.save()
