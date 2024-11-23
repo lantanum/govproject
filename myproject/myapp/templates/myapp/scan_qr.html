@@ -144,7 +144,7 @@
                         stopCamera();
 
                         // Отправляем запрос на сервер для получения данных
-                        fetch("/scan/", {
+                        fetch("myapp/scan/", {
                             method: "POST",
                             headers: {
                                 "X-CSRFToken": "{{ csrf_token }}",
@@ -185,7 +185,7 @@
         };
 
         const registerAttendance = (userId, sectionId) => {
-            fetch("/mark-attendance/", {
+            fetch("myapp/mark-attendance/", {
                 method: "POST",
                 headers: {
                     "X-CSRFToken": "{{ csrf_token }}",
