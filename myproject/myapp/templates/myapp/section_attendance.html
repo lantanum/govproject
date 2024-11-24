@@ -8,7 +8,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #7d4df3;
+        background-color: #5E37FF;
         color: #ffffff;
         padding: 10px 20px;
         font-size: 18px;
@@ -17,9 +17,8 @@
         width: 102%;
         left: -3vh;
         bottom: 3vh;
-        height: 3vh;
+        height: 5vh;
     }
-
     .back-button {
         position: absolute;
         left: 20px;
@@ -80,7 +79,7 @@
     .filter select,
     .filter input[type="date"] {
         padding: 8px;
-        border: 2px solid #7d4df3;
+        border: 2px solid #5E37FF;
         border-radius: 8px;
         background-color: #ffffff;
         color: #000000;
@@ -142,7 +141,7 @@
     <!-- Блок времени проведения -->
     <div class="time-info">
         <p>Время проведения:</p>
-        <p>10:00 - 13:00</p>
+        <p>{{ section.start_time }} - {{ section.end_time }}</p>
     </div>
 
     <!-- Фильтр по дате -->
@@ -162,8 +161,8 @@
         <tbody>
             {% for attendance in attendances %}
             <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ attendance.person.user.first_name }} {{ attendance.person.user.last_name }}</td>
+                <td>{{ attendance.person.user.username }}</td>
+                <td>{{ attendance.created_at }} </td>
             </tr>
             {% empty %}
             <tr>

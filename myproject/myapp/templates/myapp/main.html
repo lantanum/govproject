@@ -4,54 +4,61 @@
 
 {% block content %}
 <style>
-    .sections {
+    .main-sections {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        height: calc(100vh - 100px);
-        margin: 0 auto;
-        padding: 0;
+        justify-content: flex-start; /* Выравнивание к верхнему краю */
+        height: auto; /* Убираем фиксированную высоту */
+        padding: 20px 0; /* Добавляем отступ сверху */
+        width: 100%;
     }
 
-    .section-button {
+    .main-sections .section-button {
         display: block;
         width: 90%;
-        max-width: 28vh;
-        margin: 14px 25px;
-        padding: 55px;
+        margin: 14px auto;
+        padding: 20px;
         background-color: #5E37FF;
         color: white;
         border: none;
         border-radius: 15px;
         font-size: 20px;
         font-weight: bold;
-        text-align: center;
+        text-align: left;
         cursor: pointer;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         transition: transform 0.2s ease, background-color 0.3s ease;
     }
 
-    .section-button:hover {
+    .main-sections .section-button span {
+        display: block;
+        font-size: 16px;
+        font-weight: normal;
+        margin-top: 8px;
+    }
+
+    .main-sections .section-button:hover {
         background-color: #4A2DBA;
         transform: translateY(-2px);
     }
 
-    .section-button:active {
+    .main-sections .section-button:active {
         transform: translateY(1px);
     }
 
-    a {
+    .main-sections a {
         text-decoration: none;
+        width: 100%;
     }
 </style>
 
-<div class="sections">
+<div class="main-sections">
     {% for section in sections %}
     <a href="{% url 'section_attendance' section.id %}">
         <button class="section-button">
             {{ section.name }}<br>
-            <span style="font-size: 16px; font-weight: normal;">
+            <span>
                 {{ section.start_time|date:"H:i" }} - {{ section.end_time|date:"H:i" }}
             </span>
         </button>

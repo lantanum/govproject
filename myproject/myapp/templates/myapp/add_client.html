@@ -12,7 +12,7 @@
         margin-top: 20vh; /* Отступ сверху */
     }
 
-    .add-client-form input {
+    .add-client-form input, .add-client-form select {
         width: 100%;
         max-width: 360px;
         padding: 13px 15px;
@@ -20,6 +20,16 @@
         border: 1px solid #ddd;
         border-radius: 5px;
         font-size: 16px;
+        background-color: #fff;
+        color: #333;
+    }
+
+    .add-client-form select {
+        appearance: none; /* Убирает стандартный вид выпадающего списка */
+        background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23333"%3E%3Cpath d="M7 10l5 5 5-5z"/%3E%3C/svg%3E'); /* Иконка стрелки */
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        background-size: 16px;
     }
 
     .add-client-form button {

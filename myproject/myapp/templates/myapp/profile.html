@@ -28,6 +28,22 @@
         background-color: #ddd;
     }
 
+    .avatar-placeholder {
+        width: 13vh;
+        height: 13vh;
+        border-radius: 50%;
+        background-color: #ddd;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 15px;
+    }
+
+    .avatar-placeholder i {
+        font-size: 8vh;
+        color: #aaa;
+    }
+
     .profile-details {
         display: flex;
         flex-direction: column;
@@ -116,7 +132,6 @@
         background-color: #e04c4c;
     }
 
-    /* Стили модального окна */
     .modal {
         display: none;
         position: fixed;
@@ -175,24 +190,30 @@
         font-size: 27px;
         cursor: pointer;
     }
-    
-    a {
-    color: inherit;
-    text-decoration: none;
-}
 
-a:hover {
-    color: inherit; 
-    text-decoration: none; 
-}
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    a:hover {
+        color: inherit; 
+        text-decoration: none; 
+    }
 </style>
 
 <div class="profile">
     <!-- Аватар и информация -->
     <div class="profile-header">
-        <img src="{{ user.person.avatar.url }}" alt="Аватар">  <!-- Подставляем аватар текущего пользователя -->
+        {% if user.person.avatar %}
+        <img src="{{ user.person.avatar.url }}" alt="Аватар"> <!-- Если аватар есть, показываем его -->
+        {% else %}
+        <div class="avatar-placeholder">
+            <i class="material-icons">account_circle</i> <!-- Иконка пользователя -->
+        </div>
+        {% endif %}
         <div class="profile-details">
-            <p class="profile-name">{{ user.username }}</p>  <!-- Имя пользователя -->
+            <p class="profile-name">{{ user.username }}</p> <!-- Имя пользователя -->
             <p class="profile-info"><span>Логин:</span> {{ user.username }}</p> <!-- Логин -->
             <p class="profile-info"><span>Организация:</span> {{ user.person.organization }}</p> <!-- Организация пользователя -->
             <p class="profile-info"><span>Роль:</span> {{ user.person.get_role_display }}</p> <!-- Роль пользователя -->
@@ -201,7 +222,6 @@ a:hover {
 
     <!-- Действия -->
     <div class="profile-actions">
-        <!-- Ссылка на поддержку видна всем пользователям -->
         <div class="action-item" onclick="showModal()">
             <span>
                 <i class="material-icons">chat</i>
@@ -210,7 +230,6 @@ a:hover {
             <i class="material-icons">chevron_right</i>
         </div>
 
-        <!-- Доступно только руководителям и администраторам -->
         {% if user.person.role == 'director' %}
         <div class="action-item">
             <span>
@@ -228,7 +247,6 @@ a:hover {
         </div>
         {% endif %}
 
-        <!-- Доступно только администраторам -->
         {% if user.person.role == 'admin' %}
         <div class="action-item">
             <span>
@@ -239,7 +257,6 @@ a:hover {
         </div>
         {% endif %}
 
-        <!-- Доступно только тренерам -->
         {% if user.person.role == 'coach' %}
         <div class="action-item">
             <span>
