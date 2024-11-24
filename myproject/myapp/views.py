@@ -176,7 +176,7 @@ def mark_attendance(request):
             if not user_id or not section_id:
                 return JsonResponse({"success": False, "error": "Отсутствуют необходимые данные."})
 
-            person = get_object_or_404(Person, user__id=user_id)
+            person = get_object_or_404(Person, id=user_id)
             section = get_object_or_404(Section, id=section_id)
 
             current_time = timezone.now().time()
