@@ -147,14 +147,14 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            userNameDisplay.textContent = `Пользователь: ${data.username}`;
+                            userNameDisplay.textContent = `Пользователь: ${data.user.name}`;
                             userNameDisplay.style.display = "block";
 
                             markAttendanceButton.textContent = `Отметить посещение за секцию "${data.section.name}"`;
                             markAttendanceButton.style.display = "block";
 
                             markAttendanceButton.onclick = () => {
-                                registerAttendance(data.user_id, data.section.id);
+                                registerAttendance(data.user.id, data.section.id);
                             };
                         } else {
                             alert("Ошибка: " + data.error);

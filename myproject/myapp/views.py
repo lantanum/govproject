@@ -154,7 +154,7 @@ def scan_view(request):
 
                 return JsonResponse({
                     "success": True,
-                    "username": client.user.username,
+                    "user": {"id": client.id, "name": client.user.username},
                     "section": {"id": section.id, "name": section.name}
                 })
 
