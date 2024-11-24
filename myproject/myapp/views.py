@@ -314,6 +314,7 @@ def add_organization(request):
                 # Если профиль уже существует, то просто обновляем организацию для пользователя
                 person = Person.objects.get(user=director_user)
                 person.organization = organization
+                person.role = 'director'
                 person.save()
 
             # Связываем директора с организацией, привязываем не User, а Person
