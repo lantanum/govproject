@@ -154,7 +154,7 @@
                             markAttendanceButton.style.display = "block";
 
                             markAttendanceButton.onclick = () => {
-                                registerAttendance(data.username, data.section.id);
+                                registerAttendance(data.user_id, data.section.id);
                             };
                         } else {
                             alert("Ошибка: " + data.error);
