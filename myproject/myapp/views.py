@@ -139,15 +139,18 @@ def scan_view(request):
                 client = get_object_or_404(Person, user__id=user_id)
                 current_time = timezone.now().time()
 
-                # Ищем секции, привязанные к пользователю, подходящие по времени
-                section = Section.objects.filter(
-                    participants=client,
-                    start_time__lte=current_time,
-                    end_time__gte=current_time
-                ).first()
+                # Ищем секцию, связанную с пользователем и подходящую по времени
+                sections = Section.objects.filter(
+                    participants=client,  # Секция привязана к пользователю
+                    start_time__lte=current_time,  # Время начала <= текущего времени
+                    end_time__gte=current_time  # Время конца >= текущего времени
+                )
 
-                if not section:
+                if not sections.exists():
                     return JsonResponse({"success": False, "error": "Подходящих секций не найдено."})
+
+                # Возьмем первую подходящую секцию (если их несколько)
+                section = sections.first()
 
                 return JsonResponse({
                     "success": True,
@@ -161,6 +164,7 @@ def scan_view(request):
         return render(request, 'myapp/scan_qr.html')
 
     return JsonResponse({'error': 'Доступ запрещён.'}, status=403)
+
 
 def mark_attendance(request):
     if request.method == "POST":
