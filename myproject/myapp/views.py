@@ -110,56 +110,47 @@ def profile_view(request):
 
 
 def scan_view(request):
-    person = request.user.person  # Получаем связанный объект Person
+    person = request.user.person
 
     if person.role == 'client':
-        # Генерация QR-кода для клиента
         if request.method == 'POST':
-            qr_data = f"user:{request.user.username};time:{int(time.time())}"
-            return JsonResponse({'success': True, 'qr_data': qr_data})
+            qr_data = {
+                "user_id": request.user.id,
+                "expiration_time": (timezone.now() + timedelta(minutes=10)).isoformat(),
+            }
+            qr_code = generate_qr_code(qr_data)
+            return JsonResponse({"success": True, "qr_code": qr_code, "expiration_time": qr_data["expiration_time"]})
         return render(request, 'myapp/scan.html')
 
     elif person.role == 'coach':
-        # Страница для сканирования QR для тренера
         if request.method == 'POST':
-            qr_data = request.POST.get('qr_data')
-
-            # Проверка наличия данных в qr_data
+            qr_data = json.loads(request.body).get("qr_data")
             if not qr_data:
-                return JsonResponse({'success': False, 'error': 'Данные QR-кода отсутствуют.'})
+                return JsonResponse({"success": False, "error": "QR-код отсутствует."})
 
             try:
-                # Парсим qr_data
-                username = qr_data.split(';')[0].split(':')[1]
-                user = User.objects.get(username=username)
-                client_person = user.person  # Получаем Person клиента
+                parsed_data = json.loads(qr_data)
+                user_id = parsed_data.get("user_id")
+                expiration_time = datetime.fromisoformat(parsed_data.get("expiration_time"))
 
-                # Получаем секции, связанные с пользователем
-                sections = Section.objects.filter(organization=client_person.organization)
+                if timezone.now() > expiration_time:
+                    return JsonResponse({"success": False, "error": "QR-код истек."})
 
-                if not sections.exists():
-                    return JsonResponse({'success': False, 'error': 'Секции для пользователя не найдены.'})
-
-                # Возвращаем информацию о пользователе и секциях
-                sections_data = [
-                    {"id": section.id, "name": section.name, "start_time": section.start_time, "end_time": section.end_time}
-                    for section in sections
-                ]
+                client = get_object_or_404(Person, user__id=user_id)
+                sections = Section.objects.filter(organization=client.organization)
 
                 return JsonResponse({
-                    'success': True,
-                    'username': client_person.user.username,
-                    'sections': sections_data
+                    "success": True,
+                    "username": client.user.username,
+                    "sections": [{"id": s.id, "name": s.name} for s in sections],
                 })
-
-            except User.DoesNotExist:
-                return JsonResponse({'success': False, 'error': 'Пользователь не найден.'})
             except Exception as e:
-                return JsonResponse({'success': False, 'error': str(e)})
+                return JsonResponse({"success": False, "error": str(e)})
 
         return render(request, 'myapp/scan_qr.html')
 
     return JsonResponse({'error': 'Доступ запрещён.'}, status=403)
+
 
 def mark_attendance(request):
     if request.method == "POST":

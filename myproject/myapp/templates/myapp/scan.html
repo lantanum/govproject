@@ -63,48 +63,49 @@
 </div>
 
 <script>
-    let interval; // Переменная для хранения идентификатора текущего таймера
+    let timerInterval;
 
     document.getElementById('generate-qr').addEventListener('click', () => {
-        fetch("{% url 'generate_qr' %}", {
+        fetch("{% url 'scan' %}", {
             method: "POST",
             headers: {
-                "X-CSRFToken": "{{ csrf_token }}"
-            }
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Отображаем сгенерированный QR-код
-                    document.getElementById(
-                        'qr-code'
-                    ).innerHTML = `<img src="data:image/png;base64,${data.qr_code}" alt="QR Code">`;
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Отображаем QR-код
+                document.getElementById('qr-code').innerHTML = `<img src="data:image/png;base64,${data.qr_code}" alt="QR Code">`;
 
-                    // Останавливаем предыдущий таймер, если он был запущен
-                    if (interval) {
-                        clearInterval(interval);
+                // Устанавливаем таймер
+                const expirationTime = new Date(data.expiration_time);
+                const timerElement = document.getElementById('timer');
+
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+
+                timerInterval = setInterval(() => {
+                    const now = new Date();
+                    const timeLeft = expirationTime - now;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        timerElement.textContent = "QR-код истек.";
+                        return;
                     }
 
-                    // Показать таймер
-                    let expirationTime = new Date(data.expiration_time);
-                    let timer = document.getElementById('timer');
-                    interval = setInterval(() => {
-                        let now = new Date();
-                        let timeLeft = expirationTime - now;
+                    const minutes = Math.floor(timeLeft / 60000);
+                    const seconds = Math.floor((timeLeft % 60000) / 1000);
 
-                        if (timeLeft <= 0) {
-                            clearInterval(interval);
-                            timer.innerHTML = "QR-код истек";
-                        } else {
-                            let minutes = Math.floor(timeLeft / 60000);
-                            let seconds = Math.floor((timeLeft % 60000) / 1000);
-                            timer.innerHTML = `Осталось: ${minutes}мин ${seconds}сек`;
-                        }
-                    }, 1000);
-                } else {
-                    alert("Ошибка при генерации QR-кода.");
-                }
-            });
+                    timerElement.textContent = `Осталось: ${minutes} мин ${seconds} сек.`;
+                }, 1000);
+            } else {
+                alert("Ошибка генерации QR-кода: " + data.error);
+            }
+        });
     });
 </script>
+
 {% endblock %}

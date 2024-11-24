@@ -124,65 +124,42 @@
                 });
         };
 
-        // Функция для сканирования QR-кода
         const scanQRCode = () => {
-            if (!videoStream) return;
+    const drawFrame = () => {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            const drawFrame = () => {
-                if (scanning && video.readyState === video.HAVE_ENOUGH_DATA) {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
+            const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+            const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
 
-                    canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
+            if (qrCode) {
+                stopCamera();
+                fetch("{% url 'scan' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ qr_data: qrCode.data }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            userNameDisplay.textContent = `Пользователь: ${data.username}`;
+                            markAttendanceButton.onclick = () => registerAttendance(data.sections[0].id);
+                        } else {
+                            alert("Ошибка: " + data.error);
+                        }
+                    });
+            }
+        }
+        if (scanning) requestAnimationFrame(drawFrame);
+    };
+    drawFrame();
+};
 
-                    const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
-                    const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
-
-                    if (qrCode) {
-                        // QR-код успешно считан
-                        scanning = false;
-                        stopCamera();
-
-                        // Отправляем запрос на сервер для получения данных
-                        fetch("{% url 'scan' %}", {
-                            method: "POST",
-                            headers: {
-                                "X-CSRFToken": "{{ csrf_token }}",
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({ qr_data: qrCode.data }),
-                        })
-                            .then((response) => response.json())
-                            .then((data) => {
-                                if (data.success) {
-                                    parsedData = data; // Сохраняем данные
-                                    userNameDisplay.textContent = `Пользователь: ${data.username}`;
-                                    userNameDisplay.style.display = "block";
-
-                                    markAttendanceButton.textContent = `Поставить отметку за ${new Date().toLocaleDateString()}`;
-                                    markAttendanceButton.style.display = "block";
-
-                                    markAttendanceButton.onclick = () => {
-                                        registerAttendance(parsedData.user_id, parsedData.sections[0].id);
-                                    };
-                                } else {
-                                    alert("Ошибка: " + data.error);
-                                }
-                            })
-                            .catch((err) => {
-                                console.error("Ошибка:", err);
-                                alert("Ошибка при обработке QR-кода.");
-                            });
-                    }
-                }
-
-                if (scanning) {
-                    requestAnimationFrame(drawFrame);
-                }
-            };
-
-            drawFrame();
-        };
 
         const registerAttendance = (userId, sectionId) => {
             fetch("{% url 'mark_attendance' %}", {
