@@ -148,7 +148,14 @@
                     .then(data => {
                         if (data.success) {
                             userNameDisplay.textContent = `Пользователь: ${data.username}`;
-                            markAttendanceButton.onclick = () => registerAttendance(data.sections[0].id);
+                            userNameDisplay.style.display = "block";
+
+                            markAttendanceButton.textContent = `Отметить посещение за секцию "${data.section.name}"`;
+                            markAttendanceButton.style.display = "block";
+
+                            markAttendanceButton.onclick = () => {
+                                registerAttendance(data.username, data.section.id);
+                            };
                         } else {
                             alert("Ошибка: " + data.error);
                         }
@@ -159,6 +166,7 @@
     };
     drawFrame();
 };
+
 
 
         const registerAttendance = (userId, sectionId) => {

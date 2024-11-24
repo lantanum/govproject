@@ -137,13 +137,24 @@ def scan_view(request):
                     return JsonResponse({"success": False, "error": "QR-код истек."})
 
                 client = get_object_or_404(Person, user__id=user_id)
-                sections = Section.objects.filter(organization=client.organization)
+                current_time = timezone.now().time()
+
+                # Ищем секции, привязанные к пользователю, подходящие по времени
+                section = Section.objects.filter(
+                    participants=client,
+                    start_time__lte=current_time,
+                    end_time__gte=current_time
+                ).first()
+
+                if not section:
+                    return JsonResponse({"success": False, "error": "Подходящих секций не найдено."})
 
                 return JsonResponse({
                     "success": True,
                     "username": client.user.username,
-                    "sections": [{"id": s.id, "name": s.name} for s in sections],
+                    "section": {"id": section.id, "name": section.name}
                 })
+
             except Exception as e:
                 return JsonResponse({"success": False, "error": str(e)})
 
@@ -151,11 +162,9 @@ def scan_view(request):
 
     return JsonResponse({'error': 'Доступ запрещён.'}, status=403)
 
-
 def mark_attendance(request):
     if request.method == "POST":
         try:
-            # Извлечение данных из запроса
             data = json.loads(request.body)
             user_id = data.get("user_id")
             section_id = data.get("section_id")
@@ -163,28 +172,17 @@ def mark_attendance(request):
             if not user_id or not section_id:
                 return JsonResponse({"success": False, "error": "Отсутствуют необходимые данные."})
 
-            # Получаем пользователя
-            try:
-                person = Person.objects.get(user__id=user_id)
-            except Person.DoesNotExist:
-                return JsonResponse({"success": False, "error": "Пользователь не найден."})
+            person = get_object_or_404(Person, user__id=user_id)
+            section = get_object_or_404(Section, id=section_id)
 
-            # Получаем секцию
-            try:
-                section = Section.objects.get(id=section_id)
-            except Section.DoesNotExist:
-                return JsonResponse({"success": False, "error": "Секция не найдена."})
-
-            # Проверяем, разрешена ли отметка в это время
-            current_time = localtime().time()
+            current_time = timezone.now().time()
             if not (section.start_time <= current_time <= section.end_time):
                 return JsonResponse({"success": False, "error": "Сейчас занятий нет."})
 
-            # Создаем отметку
             Attendance.objects.create(
                 person=person,
                 section=section,
-                visit_date=localtime().date()
+                visit_date=timezone.now().date()
             )
 
             return JsonResponse({
@@ -198,6 +196,7 @@ def mark_attendance(request):
             return JsonResponse({"success": False, "error": str(e)})
 
     return JsonResponse({"success": False, "error": "Неверный метод запроса."})
+
 
 
 def add_section(request):
